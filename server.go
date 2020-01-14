@@ -6,6 +6,7 @@ package server
 
 import (
 	"bufio"
+	"strings"
 	"context"
 	"crypto/tls"
 	"errors"
@@ -58,6 +59,8 @@ type ServerOpts struct {
 
 	WelcomeMessage string
 
+	Whitelist string
+
 	// A logger implementation, if nil the StdLogger is used
 	Logger Logger
 }
@@ -75,6 +78,7 @@ type Server struct {
 	ctx       context.Context
 	cancel    context.CancelFunc
 	feats     string
+	whiteList string
 }
 
 // ErrServerClosed is returned by ListenAndServe() or Serve() when a shutdown
@@ -128,6 +132,8 @@ func serverOptsWithDefaults(opts *ServerOpts) *ServerOpts {
 	newOpts.PublicIp = opts.PublicIp
 	newOpts.PassivePorts = opts.PassivePorts
 
+	newOpts.Whitelist = opts.Whitelist
+
 	return &newOpts
 }
 
@@ -154,6 +160,7 @@ func NewServer(opts *ServerOpts) *Server {
 	s.ServerOpts = opts
 	s.listenTo = net.JoinHostPort(opts.Hostname, strconv.Itoa(opts.Port))
 	s.logger = opts.Logger
+	s.whiteList = opts.Whitelist
 	return s
 }
 
@@ -241,7 +248,7 @@ func (server *Server) Serve(l net.Listener) error {
 	server.ctx, server.cancel = context.WithCancel(context.Background())
 	sessionID := ""
 	for {
-		tcpConn, err := server.listener.Accept()
+		tcpConn, err := server.listener.Accept()		
 		if err != nil {
 			select {
 			case <-server.ctx.Done():
@@ -254,6 +261,14 @@ func (server *Server) Serve(l net.Listener) error {
 			}
 			return err
 		}
+
+		// this is dirty => there are stuck connections supposedly from load balancer that block sessions
+		if !strings.HasPrefix(tcpConn.RemoteAddr().String(), server.whiteList) {
+			server.logger.Printf("no session", "not a internal load balancer connection closing %v", err)
+			tcpConn.Close()
+			continue // exit and begin new accept loop
+		}
+
 		driver, err := server.Factory.NewDriver()
 		if err != nil {
 			server.logger.Printf(sessionID, "Error creating driver, aborting client connection: %v", err)

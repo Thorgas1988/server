@@ -10,8 +10,8 @@ import (
 	"flag"
 	"log"
 
-	filedriver "github.com/goftp/file-driver"
-	"github.com/goftp/server"
+	// filedriver "github.com/goftp/file-driver"
+	"github.com/blunghamer/server"
 )
 
 func main() {
@@ -27,7 +27,7 @@ func main() {
 		log.Fatalf("Please set a root to serve with -root")
 	}
 
-	factory := &filedriver.FileDriverFactory{
+	factory := &FileDriverFactory{
 		RootPath: *root,
 		Perm:     server.NewSimplePerm("user", "group"),
 	}
@@ -37,6 +37,7 @@ func main() {
 		Port:     *port,
 		Hostname: *host,
 		Auth:     &server.SimpleAuth{Name: *user, Password: *pass},
+		Whitelist: "127.0.0.1",
 	}
 
 	log.Printf("Starting ftp server on %v:%v", opts.Hostname, opts.Port)

@@ -107,10 +107,18 @@ func newSessionID() string {
 // message when the connection closes. This loop will be running inside a
 // goroutine, so use this channel to be notified when the connection can be
 // cleaned up.
-func (conn *Conn) Serve() {
+func (conn *Conn) Serve() {		
 	conn.logger.Print(conn.sessionID, "Connection Established")
 	// send welcome
-	conn.writeMessage(220, conn.server.WelcomeMessage)
+	numbyts , err := conn.writeMessage(220, conn.server.WelcomeMessage)
+	if err != nil {
+		conn.logger.Printf(conn.sessionID, "Error hello not written %v, terminating", err)		
+		conn.Close()		
+		return
+	} 
+	
+	conn.logger.Printf(conn.sessionID, "Ok wrote hello, sent %v", numbyts)	
+	
 	// read commands
 	for {
 		line, err := conn.controlReader.ReadString('\n')
@@ -118,7 +126,6 @@ func (conn *Conn) Serve() {
 			if err != io.EOF {
 				conn.logger.Print(conn.sessionID, fmt.Sprint("read error:", err))
 			}
-
 			break
 		}
 		conn.receiveLine(line)
