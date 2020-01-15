@@ -18,6 +18,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -43,6 +44,7 @@ type Conn struct {
 	appendData    bool
 	closed        bool
 	tls           bool
+	probeTimer	  *time.Timer
 }
 
 func (conn *Conn) LoginUser() string {

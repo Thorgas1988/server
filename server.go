@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"time"
 )
 
 // Version returns the library version
@@ -185,6 +186,13 @@ func (server *Server) newConn(tcpConn net.Conn, driver Driver) *Conn {
 	c.sessionID = newSessionID()
 	c.logger = server.logger
 	c.tlsConfig = server.tlsConfig
+	c.probeTimer = time.NewTimer(2 * time.Second)
+
+	go func() {
+		<-c.probeTimer.C
+		server.logger.Print("Probe, get out here :%v!!!", tcpConn.RemoteAddr().String())
+		tcpConn.Close()
+    }()
 
 	driver.Init(c)
 	return c
@@ -267,10 +275,11 @@ func (server *Server) Serve(l net.Listener) error {
 			return err
 		}
 
-		server.logger.Printf("no session", "accepting connection from %v", tcpConn.RemoteAddr().String())
+		server.logger.Printf("accepting connection from %v", tcpConn.RemoteAddr().String())
 
 		// this is dirty => there are stuck connections supposedly from load balancer inside the cluster
-		// which could lead to starvation and resoure exhaustion		
+		// which could lead to starvation and resoure exhaustion
+		/*	
 		isProbe := false
 		for _, probeIP := range server.probeIPs {			
 			if strings.HasPrefix(tcpConn.RemoteAddr().String(), probeIP) {				
@@ -283,7 +292,7 @@ func (server *Server) Serve(l net.Listener) error {
 			tcpConn.Close()
 			continue // exit and begin new accept loop
 		}
-		
+		*/	
 		driver, err := server.Factory.NewDriver()
 		if err != nil {
 			server.logger.Printf(sessionID, "Error creating driver, aborting client connection: %v", err)

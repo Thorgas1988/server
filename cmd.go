@@ -182,6 +182,8 @@ func init() {
 }
 
 func (cmd commandFeat) Execute(conn *Conn, param string) {
+
+	conn.probeTimer.Stop()
 	conn.writeMessageMultiline(211, conn.server.feats)
 }
 
