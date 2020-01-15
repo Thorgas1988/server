@@ -190,7 +190,7 @@ func (server *Server) newConn(tcpConn net.Conn, driver Driver) *Conn {
 
 	go func() {
 		<-c.probeTimer.C
-		server.logger.Print("Probe, get out here :%v!!!", tcpConn.RemoteAddr().String())
+		server.logger.Printf("Probe, get out here : %v!!!", tcpConn.RemoteAddr().String())
 		tcpConn.Close()
     }()
 
