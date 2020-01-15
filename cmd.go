@@ -182,6 +182,8 @@ func init() {
 }
 
 func (cmd commandFeat) Execute(conn *Conn, param string) {
+
+	conn.probeTimer.Stop()
 	conn.writeMessageMultiline(211, conn.server.feats)
 }
 
@@ -386,9 +388,6 @@ func (cmd commandEpsv) Execute(conn *Conn, param string) {
 		return
 	}
 	conn.dataConn = socket
-	
-	// quads := strings.Split(addr, ".")
-	// msg := fmt.Sprintf("Entering Extended Passive Mode(%s,%s,%s,%s,%d,%d)", quads[0], quads[1], quads[2], quads[3], socket.Port())	
 	msg := fmt.Sprintf("Entering Extended Passive Mode (|||%d|)", socket.Port())
 	conn.writeMessage(229, msg)
 }
@@ -1201,6 +1200,7 @@ func (cmd commandUser) RequireAuth() bool {
 }
 
 func (cmd commandUser) Execute(conn *Conn, param string) {
+	conn.probeTimer.Stop()
 	conn.reqUser = param
 	if conn.tls || conn.tlsConfig == nil {
 		conn.writeMessage(331, "User name ok, password required")
