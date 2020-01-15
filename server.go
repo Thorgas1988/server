@@ -269,14 +269,19 @@ func (server *Server) Serve(l net.Listener) error {
 
 		// this is dirty => there are stuck connections supposedly from load balancer inside the cluster
 		// which could lead to starvation and resoure exhaustion		
-		for _, probeIP := range server.probeIPs {
-			if strings.HasPrefix(tcpConn.RemoteAddr().String(), probeIP) {
-				server.logger.Printf("no session", "identified probe connections closing %v", tcpConn.RemoteAddr().String())
-				tcpConn.Close()
-				continue // exit and begin new accept loop
-			}
+		isProbe := false
+		for _, probeIP := range server.probeIPs {			
+			if strings.HasPrefix(tcpConn.RemoteAddr().String(), probeIP) {				
+				isProbe = true				
+			}			
 		} 
 
+		if isProbe {
+			server.logger.Printf("no session", "identified probe connections closing %v", tcpConn.RemoteAddr().String())
+			tcpConn.Close()
+			continue // exit and begin new accept loop
+		}
+		
 		server.logger.Printf("no session", "accepting connection from %v", tcpConn.RemoteAddr().String())
 
 		driver, err := server.Factory.NewDriver()
