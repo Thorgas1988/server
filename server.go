@@ -275,7 +275,9 @@ func (server *Server) Serve(l net.Listener) error {
 				tcpConn.Close()
 				continue // exit and begin new accept loop
 			}
-		}
+		} 
+
+		server.logger.Printf("no session", "accepting connection from %v", tcpConn.RemoteAddr().String())
 
 		driver, err := server.Factory.NewDriver()
 		if err != nil {
