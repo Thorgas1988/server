@@ -267,6 +267,8 @@ func (server *Server) Serve(l net.Listener) error {
 			return err
 		}
 
+		server.logger.Printf("no session", "accepting connection from %v", tcpConn.RemoteAddr().String())
+
 		// this is dirty => there are stuck connections supposedly from load balancer inside the cluster
 		// which could lead to starvation and resoure exhaustion		
 		isProbe := false
@@ -282,8 +284,6 @@ func (server *Server) Serve(l net.Listener) error {
 			continue // exit and begin new accept loop
 		}
 		
-		server.logger.Printf("no session", "accepting connection from %v", tcpConn.RemoteAddr().String())
-
 		driver, err := server.Factory.NewDriver()
 		if err != nil {
 			server.logger.Printf(sessionID, "Error creating driver, aborting client connection: %v", err)
