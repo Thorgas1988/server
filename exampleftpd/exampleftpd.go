@@ -20,7 +20,7 @@ func main() {
 		user = flag.String("user", "admin", "Username for login")
 		pass = flag.String("pass", "123456", "Password for login")
 		port = flag.Int("port", 2121, "Port")
-		host = flag.String("host", "localhost", "Host")
+		host = flag.String("host", "localhost", "Host")		
 	)
 	flag.Parse()
 	if *root == "" {
@@ -36,8 +36,7 @@ func main() {
 		Factory:  factory,
 		Port:     *port,
 		Hostname: *host,
-		Auth:     &server.SimpleAuth{Name: *user, Password: *pass},
-		Whitelist: "127.0.0.1",
+		Auth:     &server.SimpleAuth{Name: *user, Password: *pass},				
 	}
 
 	log.Printf("Starting ftp server on %v:%v", opts.Hostname, opts.Port)

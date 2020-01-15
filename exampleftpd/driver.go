@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"log"
 
 	// "github.com/goftp/server"
 	"github.com/blunghamer/server"
@@ -174,7 +175,9 @@ func (driver *FileDriver) GetFile(path string, offset int64) (int64, io.ReadClos
 }
 
 func (driver *FileDriver) PutFile(destPath string, data io.Reader, appendData bool) (int64, error) {
+	
 	rPath := driver.realPath(destPath)
+	log.Println(rPath)
 	var isExist bool
 	f, err := os.Lstat(rPath)
 	if err == nil {

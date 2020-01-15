@@ -59,7 +59,8 @@ type ServerOpts struct {
 
 	WelcomeMessage string
 
-	Whitelist string
+	// List of ipAddresses we close early separated by pipe |
+	Probelist string
 
 	// A logger implementation, if nil the StdLogger is used
 	Logger Logger
@@ -78,7 +79,7 @@ type Server struct {
 	ctx       context.Context
 	cancel    context.CancelFunc
 	feats     string
-	whiteList string
+	probeIPs  []string
 }
 
 // ErrServerClosed is returned by ListenAndServe() or Serve() when a shutdown
@@ -132,7 +133,7 @@ func serverOptsWithDefaults(opts *ServerOpts) *ServerOpts {
 	newOpts.PublicIp = opts.PublicIp
 	newOpts.PassivePorts = opts.PassivePorts
 
-	newOpts.Whitelist = opts.Whitelist
+	newOpts.Probelist = opts.Probelist
 
 	return &newOpts
 }
@@ -160,7 +161,11 @@ func NewServer(opts *ServerOpts) *Server {
 	s.ServerOpts = opts
 	s.listenTo = net.JoinHostPort(opts.Hostname, strconv.Itoa(opts.Port))
 	s.logger = opts.Logger
-	s.whiteList = opts.Whitelist
+	if opts.Probelist != "" {
+		s.probeIPs = strings.Split(opts.Probelist, "|")
+	} else {
+		s.probeIPs = make([]string,0)
+	}
 	return s
 }
 
@@ -262,12 +267,17 @@ func (server *Server) Serve(l net.Listener) error {
 			return err
 		}
 
-		// this is dirty => there are stuck connections supposedly from load balancer that block sessions
-		if !strings.HasPrefix(tcpConn.RemoteAddr().String(), server.whiteList) {
-			server.logger.Printf("no session", "not a internal load balancer connection closing %v", err)
-			tcpConn.Close()
-			continue // exit and begin new accept loop
+		// this is dirty => there are stuck connections supposedly from load balancer inside the cluster
+		// which could lead to starvation and resoure exhaustion
+		/*
+		for _, probeIP := range server.probeIPs {
+			if strings.HasPrefix(tcpConn.RemoteAddr().String(), probeIP) {
+				server.logger.Printf("no session", "identified probe connections closing %v", tcpConn.RemoteAddr().String())
+				tcpConn.Close()
+				continue // exit and begin new accept loop
+			}
 		}
+		*/
 
 		driver, err := server.Factory.NewDriver()
 		if err != nil {

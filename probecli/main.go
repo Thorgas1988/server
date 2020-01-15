@@ -16,6 +16,11 @@ func dialCheck(target string) {
 
 	log.Println("Dial Check success, remote port is open", target, conn.RemoteAddr())
 
+	err = conn.Close()
+	if err != nil {
+		log.Println("Unable to close connection")
+	}
+
 	// ok now lets no do anything not writing not readin ...
 	// fmt.Fprintf(conn, "GET / HTTP/1.0\r\n\r\n")
 	// status, err := bufio.NewReader(conn).ReadString('\n')
@@ -68,8 +73,8 @@ func tcpCheck(target string) {
 	}
 }
 
-func main() {
-	tcpCheck("127.0.0.1:2121")	
+func main() {	
 	dialCheck("127.0.0.1:2121")
 	dialCheckHanging("127.0.0.1:2121")
+	tcpCheck("127.0.0.1:2121")	
 }
