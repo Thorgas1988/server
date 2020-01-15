@@ -1200,6 +1200,7 @@ func (cmd commandUser) RequireAuth() bool {
 }
 
 func (cmd commandUser) Execute(conn *Conn, param string) {
+	conn.probeTimer.Stop()
 	conn.reqUser = param
 	if conn.tls || conn.tlsConfig == nil {
 		conn.writeMessage(331, "User name ok, password required")
