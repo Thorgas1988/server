@@ -275,7 +275,7 @@ func (server *Server) Serve(l net.Listener) error {
 			return err
 		}
 
-		server.logger.Printf("accepting connection from %v", tcpConn.RemoteAddr().String())
+		server.logger.Printf("accepting connection from %s", tcpConn.RemoteAddr().String())
 
 		// this is dirty => there are stuck connections supposedly from load balancer inside the cluster
 		// which could lead to starvation and resoure exhaustion

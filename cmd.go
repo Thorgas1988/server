@@ -388,10 +388,7 @@ func (cmd commandEpsv) Execute(conn *Conn, param string) {
 		return
 	}
 	conn.dataConn = socket
-	
-	quads := strings.Split(addr, ".")
-	msg := fmt.Sprintf("Entering Extended Passive Mode(%s,%s,%s,%s,%d,%d)", quads[0], quads[1], quads[2], quads[3], socket.Port())	
-	//msg := fmt.Sprintf("Entering Extended Passive Mode (|||%d|)", socket.Port())
+	msg := fmt.Sprintf("Entering Extended Passive Mode (|||%d|)", socket.Port())
 	conn.writeMessage(229, msg)
 }
 
