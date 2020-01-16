@@ -186,7 +186,7 @@ func (server *Server) newConn(tcpConn net.Conn, driver Driver) *Conn {
 	c.sessionID = newSessionID()
 	c.logger = server.logger
 	c.tlsConfig = server.tlsConfig
-	c.probeTimer = time.NewTimer(2 * time.Second)
+	c.probeTimer = time.NewTimer(time.Second)
 
 	go func() {
 		<-c.probeTimer.C
