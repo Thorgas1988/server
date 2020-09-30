@@ -14,6 +14,8 @@ import (
 	"net"
 	"strconv"
 	"time"
+
+	_ "github.com/brucespang/go-tcpinfo"
 )
 
 // Version returns the library version
@@ -186,12 +188,12 @@ func (server *Server) newConn(tcpConn net.Conn, driver Driver) *Conn {
 	c.sessionID = newSessionID()
 	c.logger = server.logger
 	c.tlsConfig = server.tlsConfig
-	c.probeTimer = time.NewTimer(2 * time.Second)
+	c.probeTimer = time.NewTimer(time.Second)
 
 	go func() {
 		<-c.probeTimer.C
 		server.logger.Printf(c.sessionID, "probe, get out here: %s!!!", tcpConn.RemoteAddr().String())
-		tcpConn.Close()
+		server.listener.Close()
     }()
 
 	driver.Init(c)
@@ -274,7 +276,15 @@ func (server *Server) Serve(l net.Listener) error {
 			}
 			return err
 		}
+/*
+		tcpInfo, err := tcpinfo.GetsockoptTCPInfo(&tcpConn)
+		if err != nil {
+			server.logger.Printf(sessionID, "listening error: %v", err)
+			continue
+		}
 
+		tcpInfo.
+*/
 		server.logger.Printf(sessionID, "accepting connection from %s", tcpConn.RemoteAddr().String())
 
 		// this is dirty => there are stuck connections supposedly from load balancer inside the cluster

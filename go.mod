@@ -1,4 +1,4 @@
-module github.com/Thorgas1988/server
+module github.com/blunghamer/server
 
 go 1.13
 
